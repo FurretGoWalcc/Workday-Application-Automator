@@ -73,7 +73,7 @@ const gpa = "3.75";
 const skills = ["Python", "SQL"];
 const startDate = "2022";
 const endDate = "2026";
-const resumeFilePath = "absolute/path";
+const resumeFilePath = "./blank.txt";
 const linkedInLink = "https://www.linkedin.com/in/username/";
 const githubLink = "https://github.com/username";
 

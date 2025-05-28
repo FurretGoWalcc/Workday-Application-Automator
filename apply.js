@@ -14,28 +14,22 @@ async function apply(url) {
     await page.goto(url);
 
     await signIn(page);
-
     if (await selectorExists(page, 'div[data-automation-id="errorMessage"]')) {
         console.log("Account did not exist. Making new account and signing in");
         await createAccount(page);
         await signIn(page);
     }
 
-    console.log("Starting Application")
-    await page.locator('a[data-automation-id="adventureButton"]').click();
-    await page.locator('a[data-automation-id="adventureButton"]').click();
+    await startApp(page)
 
-    await page.locator('a[data-automation-id="applyManually"]').click();
-    await page.waitForNavigation({ timeout: 10000 }),
+    await page.waitForSelector('div[data-automation-id="contactInformationPage"]')
 
-        await fillBasicInfo(page);
+    await fillBasicInfo(page);
 
-    /* "How did you hear about us" must be manually entered */
     await page.waitForSelector('div[data-automation-id="myExperiencePage"]', { timeout: 0 });
 
     await fillExperience(page);
 
-    /* Application Questions section must be done manually */
     await page.waitForSelector('div[data-automation-id="voluntaryDisclosuresPage"]', { timeout: 0 });
 
     await fillVoluntaryDisclosures(page);
@@ -56,6 +50,16 @@ async function getPage() {
     return page;
 }
 
+async function signIn(page) {
+    await page.locator('button[data-automation-id="utilityButtonSignIn"]').click();
+
+    await page.locator('input[data-automation-id="email"]').fill(email);
+
+    await page.locator('input[data-automation-id="password"]').fill(password);
+
+    await page.locator('button[data-automation-id="signInSubmitButton"]').click({ delay: 500 });
+}
+
 async function createAccount(page) {
     await page.locator('button[data-automation-id="createAccountLink"]').click();
 
@@ -72,14 +76,14 @@ async function createAccount(page) {
     page.locator('button[data-automation-id="createAccountSubmitButton"]').click()
 }
 
-async function signIn(page) {
-    await page.locator('button[data-automation-id="utilityButtonSignIn"]').click();
+async function startApp(page) {
+    console.log("Starting Application")
 
-    await page.locator('input[data-automation-id="email"]').fill(email);
+    await page.locator('a[data-automation-id="adventureButton"]').click();
 
-    await page.locator('input[data-automation-id="password"]').fill(password);
+    await page.locator('a[data-automation-id="adventureButton"]').click();
 
-    await page.locator('button[data-automation-id="signInSubmitButton"]').click({ delay: 500 });
+    await page.locator('a[data-automation-id="applyManually"]').click();
 }
 
 async function fillBasicInfo(page) {
@@ -139,7 +143,6 @@ async function fillBasicInfo(page) {
         el => el.fill(phoneNumber)
     );
 
-    /* Final action: Click "Next" */
     await page.locator(nextButton).click();
 }
 
@@ -149,15 +152,23 @@ async function fillExperience(page) {
     /* Work */
     let addedWorks = 0;
     for (const work of workexperiences) {
-        await withOptSelector(page, 'div[data-automation-id="workExperienceSection"] button[data-automation-id*="Add"]',
-            async el => el.click(),
-            5000
-        );
-        await withOptSelector(page, 'div[data-automation-id="workExperienceSection"] button[data-automation-id*="add"]',
-            async el => el.click(),
-            5000
-        );
         addedWorks += 1;
+        if (!(await selectorExists(page, `div[data-automation-id="workExperience-${addedWorks}"]`))) {
+            // If a needed work section doesn't exist...
+            if (addedWorks === 1) {
+                // Need to add the first section
+                await withOptSelector(page, 'div[data-automation-id="workExperienceSection"] button[data-automation-id*="add"]',
+                    async el => el.click(),
+                    5000
+                );
+            } else {
+                // Add additional sections
+                await withOptSelector(page, 'div[data-automation-id="workExperienceSection"] button[data-automation-id*="Add"]',
+                    async el => el.click(),
+                    5000
+                );
+            }
+        }
 
         await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] input[data-automation-id="jobTitle"]`,
             async el => el.fill(work.jobtitle)
@@ -257,22 +268,29 @@ async function fillExperience(page) {
     if (linkedInLink) {
         const linkedInInput = 'input[data-automation-id="linkedinQuestion"]';
         if (await selectorExists(page, linkedInInput)) {
+            // There is an specific linkedIn URL box
             await page.locator(linkedInInput).fill(linkedInLink);
         } else {
-            await withOptSelector(page, 'div[data-automation-id="websiteSection"] button[data-automation-id="Add"]', async el => {
-                await el.click();
-            });
+            // Must use a generic website box
             addedWebs += 1;
+            if (!(await selectorExists(page, `div[data-automation-id="websitePanelSet-${addedWebs}"] input`))) {
+                // Needed website box must be created
+                await withOptSelector(page, 'div[data-automation-id="websiteSection"] button[data-automation-id="Add"]', async el => {
+                    await el.click();
+                });
+            }
             await page.locator(`div[data-automation-id="websitePanelSet-${addedWebs}"] input`).fill(linkedInLink);
         }
     }
     if (githubLink) {
-        await withOptSelector(page, 'div[data-automation-id="websiteSection"] button[data-automation-id="Add"]', async el => {
-            await el.click();
-        });
         addedWebs += 1;
+        if (!(await selectorExists(page, `div[data-automation-id="websitePanelSet-${addedWebs}"] input`))) {
+            // Needed website box must be created
+            await withOptSelector(page, 'div[data-automation-id="websiteSection"] button[data-automation-id="Add"]', async el => {
+                await el.click();
+            });
+        }
         await page.locator(`div[data-automation-id="websitePanelSet-${addedWebs}"] input`).fill(githubLink);
-
     }
 
     await page.locator(nextButton).click();
@@ -282,51 +300,87 @@ async function fillVoluntaryDisclosures(page) {
     console.log("Filling voluntary disclosure info");
 
     /* Gender */
-    await page.locator('button[data-automation-id="gender"]').click();
-    await page.keyboard.type(gender, { delay: 100 });
-    await page.keyboard.press('Enter');
+    await withOptSelector(page, 'button[data-automation-id="gender"]',
+        async el => {
+            await el.click();
+            await page.keyboard.type(gender, { delay: 100 });
+            await page.keyboard.press('Enter');
+        }
+    );
 
     await new Promise(r => setTimeout(r, 200));
 
     /* Ethnicity */
-    const hispanicLatinoDropdown = 'button[data-automation-id="hispanicOrLatino"]';
-    if (await selectorExists(hispanicLatinoDropdown)) {
-        await page.click(hispanicLatinoDropdown);
-        await page.keyboard.type(hispanicOrLatino, { delay: 100 });
-        await page.keyboard.type('Enter');
-    }
+    await withOptSelector(page, 'button[data-automation-id="hispanicOrLatino"]',
+        async el => {
+            await el.click();
+            await page.keyboard.type(hispanicOrLatino, { delay: 100 });
+            await page.keyboard.press('Enter');
+        }
+    );
 
-    await page.locator('button[data-automation-id="ethnicityDropdown"]').click();
-    await page.keyboard.type(ethnicity, { delay: 100 });
-    await page.keyboard.press('Enter');
+    await withOptSelector(page, 'button[data-automation-id="ethnicityDropdown"]',
+        async el => {
+            await el.click();
+            await page.keyboard.type(ethnicity, { delay: 100 });
+            await page.keyboard.press('Enter');
+        }
+    );
 
     await new Promise(r => setTimeout(r, 200));
 
     /* Veteran Status */
-    await page.locator('button[data-automation-id="veteranStatus"]').click();
-    await page.keyboard.type(veteranStatus, { delay: 100 });
-    await page.keyboard.press('Enter');
+    await withOptSelector(page, 'button[data-automation-id="veteranStatus"]',
+        async el => {
+            await el.click();
+            await page.keyboard.type(veteranStatus, { delay: 100 });
+            await page.keyboard.press('Enter');
+        }
+    );
 
-    await page.locator('input[data-automation-id="agreementCheckbox"]').click();
+    /* Agreement Checkbox */
+    await withOptSelector(page, 'input[data-automation-id="agreementCheckbox"]',
+        async el => await el.click()
+    );
 
-    await page.locator(nextButton).click();
+    /* Next Button */
+    await withOptSelector(page, nextButton,
+        async el => await el.click()
+    );
 }
 
 async function fillSelfIdentify(page) {
     console.log("Filling disability info");
 
-    await page.locator('input[data-automation-id="name"]').fill(fullName);
+    /* Full Name */
+    await withOptSelector(page, 'input[data-automation-id="name"]',
+        async el => await el.fill(fullName)
+    );
 
-    await page.locator('div[data-automation-id="dateIcon"]').click();
-    await page.locator('button[data-automation-id="datePickerSelectedToday"]').click();
+    /* Birth Date */
+    await withOptSelector(page, 'div[data-automation-id="dateIcon"]',
+        async el => await el.click()
+    );
 
+    await withOptSelector(page, 'button[data-automation-id="datePickerSelectedToday"]',
+        async el => await el.click()
+    );
+
+    /* Disability Status */
     if (disability === 'yes') {
-        await page.locator('input[id="64cbff5f364f10000ae7a421cf210000"]').click();
-    }
-    else if (disability === 'no') {
-        await page.locator('input[id="64cbff5f364f10000aeec521b4ec0000"]').click();
+        await withOptSelector(page, 'input[id="64cbff5f364f10000ae7a421cf210000"]',
+            async el => await el.click()
+        );
+    } else if (disability === 'no') {
+        await withOptSelector(page, 'input[id="64cbff5f364f10000aeec521b4ec0000"]',
+            async el => await el.click()
+        );
     } else if (disability === 'abstain') {
-        await page.locator('input[id="64cbff5f364f10000af3af293a050000"]').click();
+        await withOptSelector(page, 'input[id="64cbff5f364f10000af3af293a050000"]',
+            async el => await el.click()
+        );
     }
+
+    /* Next Button */
     await page.locator(nextButton).click();
 }
