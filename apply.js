@@ -73,7 +73,7 @@ async function createAccount(page) {
         await page.click(createAccountCheckbox);
     }
 
-    page.locator('button[data-automation-id="createAccountSubmitButton"]').click()
+    await page.locator('button[data-automation-id="createAccountSubmitButton"]').click()
 }
 
 async function startApp(page) {
