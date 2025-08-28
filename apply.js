@@ -179,22 +179,22 @@ async function fillExperience(page) {
         await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] input[data-automation-id="location"]`,
             async el => el.fill(work.location)
         );
-        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-startDate"]\
+        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-startDate"]
             input[data-automation-id="dateSectionMonth-input"]`, async el => {
             await (await el.waitHandle()).focus();
             await page.keyboard.type(work.startDateMonth, { delay: 100 });
         });
-        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-startDate"]\
+        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-startDate"]
             input[data-automation-id="dateSectionYear-input"]`, async el => {
             await (await el.waitHandle()).focus();
             await page.keyboard.type(work.startDateYear, { delay: 100 });
         });
-        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-endDate"]\
+        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-endDate"]
             input[data-automation-id="dateSectionMonth-input"]`, async el => {
             await (await el.waitHandle()).focus();
             await page.keyboard.type(work.endDateMonth, { delay: 100 });
         });
-        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-endDate"]\
+        await withOptSelector(page, `div[data-automation-id="workExperience-${addedWorks}"] div[data-automation-id="formField-endDate"]
             input[data-automation-id="dateSectionYear-input"]`, async el => {
             await (await el.waitHandle()).focus();
             await page.keyboard.type(work.endDateYear, { delay: 100 });
