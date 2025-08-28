@@ -20,7 +20,7 @@ async function withOptSelector(page, selector, callback, searchTimeout = 2000) {
         }
         throw err; // some other unexpected error
     }
-    await callback(el)
+    return await callback(el);
 }
 
 export class WorkExperience {
