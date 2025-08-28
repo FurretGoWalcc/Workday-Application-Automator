@@ -41,7 +41,7 @@ Every day, I'm humbled to work alongside brilliant minds who are just as passion
     new WorkExperience({
         jobtitle: 'Machine Learning Lead',
         company: 'VisionaryAI Labs',
-        location: 'Redmont, Washington',
+        location: 'Redmond, Washington',
         startDateMonth: '05',
         startDateYear: '2021',
         endDateMonth: '07',
