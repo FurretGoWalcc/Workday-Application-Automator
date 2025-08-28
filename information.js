@@ -81,6 +81,6 @@ const gender = "Male";
 const ethnicity = "Black";
 const hispanicOrLatino = "No";
 const veteranStatus = "I am not a veteran";
-const disability = "no"; // Either "yes", "no", or "abstain" (perfer not to say)
+const disability = "no"; // Either "yes", "no", or "abstain" (prefer not to say)
 
 export { email, password, fullName, firstName, lastName, suffix, street, city, state, postalCode, phoneType, phoneNumber, workexperiences, school, degree, fieldOfStudy, gpa, skills, startDate, endDate, resumeFilePath, linkedInLink, githubLink, gender, ethnicity, hispanicOrLatino, veteranStatus, disability };
